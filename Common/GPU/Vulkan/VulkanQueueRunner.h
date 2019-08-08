@@ -20,7 +20,7 @@ struct VKRImage;
 enum {
 	QUEUE_HACK_MGS2_ACID = 1,
 	QUEUE_HACK_SONIC = 2,
-	// Killzone PR = 4.
+	QUEUE_HACK_KILLZONE = 4,
 	QUEUE_HACK_RENDERPASS_MERGE = 8,
 };
 
@@ -119,6 +119,7 @@ enum class VKRStepType : uint8_t {
 	BLIT,
 	READBACK,
 	READBACK_IMAGE,
+	SKIP,
 };
 
 enum class VKRRenderPassAction : uint8_t {
@@ -288,6 +289,7 @@ private:
 	void ApplyMGSHack(std::vector<VKRStep *> &steps);
 	void ApplySonicHack(std::vector<VKRStep *> &steps);
 	void ApplyRenderPassMerge(std::vector<VKRStep *> &steps);
+	void ApplyKillzoneHack(std::vector<VKRStep *> &steps);
 
 	static void SetupTransitionToTransferSrc(VKRImage &img, VkImageAspectFlags aspect, VulkanBarrier *recordBarrier);
 	static void SetupTransitionToTransferDst(VKRImage &img, VkImageAspectFlags aspect, VulkanBarrier *recordBarrier);

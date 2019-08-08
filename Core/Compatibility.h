@@ -60,6 +60,7 @@ struct CompatFlags {
 	bool DisableAccurateDepth;
 	bool MGS2AcidHack;
 	bool SonicRivalsHack;
+	bool KillzoneHack;
 	bool BlockTransferAllowCreateFB;
 	bool IntraVRAMBlockTransferAllowCreateFB;
 	bool YugiohSaveFix;

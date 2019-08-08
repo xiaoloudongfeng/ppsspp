@@ -517,6 +517,8 @@ void GPU_Vulkan::InitDeviceObjects() {
 		hacks |= QUEUE_HACK_MGS2_ACID;
 	if (PSP_CoreParameter().compat.flags().SonicRivalsHack)
 		hacks |= QUEUE_HACK_SONIC;
+	if (PSP_CoreParameter().compat.flags().KillzoneHack)
+		hacks |= QUEUE_HACK_KILLZONE;
 
 	// Always on.
 	hacks |= QUEUE_HACK_RENDERPASS_MERGE;
