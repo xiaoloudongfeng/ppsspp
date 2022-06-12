@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include <map>
 #include <sstream>
 
 #include "Common/Log.h"
@@ -85,26 +86,27 @@ bool VKRGraphicsPipeline::Create(VulkanContext *vulkan) {
 	return success;
 }
 
-bool VKRComputePipeline::Create(VulkanContext *vulkan) {
+bool VKRComputePipeline::CreateAsync(VulkanContext *vulkan) {
 	if (!desc) {
 		// Already failed to create this one.
 		return false;
 	}
-	VkPipeline vkpipeline;
-	VkResult result = vkCreateComputePipelines(vulkan->GetDevice(), desc->pipelineCache, 1, &desc->pipe, nullptr, &vkpipeline);
+	pipeline->SpawnEmpty(&g_threadManager, [=] {
+		VkPipeline vkpipeline;
+		VkResult result = vkCreateComputePipelines(vulkan->GetDevice(), desc->pipelineCache, 1, &desc->pipe, nullptr, &vkpipeline);
 
-	bool success = true;
-	if (result != VK_SUCCESS) {
-		pipeline->Post(VK_NULL_HANDLE);
-		ERROR_LOG(G3D, "Failed creating compute pipeline! result='%s'", VulkanResultToString(result));
-		success = false;
-	} else {
-		pipeline->Post(vkpipeline);
-	}
-
-	delete desc;
+		bool success = true;
+		if (result == VK_SUCCESS) {
+			return vkpipeline;
+		} else {
+			ERROR_LOG(G3D, "Failed creating compute pipeline! result='%s'", VulkanResultToString(result));
+			success = false;
+			return (VkPipeline)VK_NULL_HANDLE;
+		}
+		delete desc;
+	}, TaskType::CPU_COMPUTE);
 	desc = nullptr;
-	return success;
+	return true;
 }
 
 VKRFramebuffer::VKRFramebuffer(VulkanContext *vk, VkCommandBuffer initCmd, VkRenderPass renderPass, int _width, int _height, const char *tag) : vulkan_(vk) {
@@ -450,7 +452,6 @@ VulkanRenderManager::~VulkanRenderManager() {
 	StopThread();
 	vulkan_->WaitUntilQueueIdle();
 
-	DrainCompileQueue();
 	VkDevice device = vulkan_->GetDevice();
 	vkDestroySemaphore(device, acquireSemaphore_, nullptr);
 	vkDestroySemaphore(device, renderingCompleteSemaphore_, nullptr);
@@ -466,12 +467,34 @@ VulkanRenderManager::~VulkanRenderManager() {
 	queueRunner_.DestroyDeviceObjects();
 }
 
+class CreateMultiPipelinesTask : public Task {
+public:
+	CreateMultiPipelinesTask(VulkanContext *vulkan, std::vector<VKRGraphicsPipeline *> pipelines) : vulkan_(vulkan), pipelines_(pipelines) {}
+	~CreateMultiPipelinesTask() {}
+
+	TaskType Type() const override {
+		return TaskType::CPU_COMPUTE;
+	}
+
+	void Run() override {
+		for (auto pipeline : pipelines_) {
+			pipeline->Create(vulkan_);
+		}
+	}
+
+	VulkanContext *vulkan_;
+	std::vector<VKRGraphicsPipeline *> pipelines_;
+};
+
 void VulkanRenderManager::CompileThreadFunc() {
 	SetCurrentThreadName("ShaderCompile");
 	while (true) {
 		std::vector<CompileQueueEntry> toCompile;
 		{
 			std::unique_lock<std::mutex> lock(compileMutex_);
+			// TODO: Should this be while?
+			// It may be beneficial also to unlock and wait a little bit to see if we get some more shaders
+			// so we can do a better job of thread-sorting them.
 			if (compileQueue_.empty()) {
 				compileCond_.wait(lock);
 			}
@@ -484,27 +507,34 @@ void VulkanRenderManager::CompileThreadFunc() {
 
 		NOTICE_LOG(G3D, "Compilation thread has %d pipelines to create", (int)toCompile.size());
 
-		// TODO: Here we can sort the pending pipelines by vertex and fragment shaders,
+		std::map<std::pair<Promise<VkShaderModule> *, Promise<VkShaderModule> *>, std::vector<VKRGraphicsPipeline *>> map;
+
+		// TODO: Here we can sort pending graphics pipelines by vertex and fragment shaders,
 		// and split up further.
 		// Those with the same pairs of shaders should be on the same thread.
 		for (auto &entry : toCompile) {
 			switch (entry.type) {
 			case CompileQueueEntry::Type::GRAPHICS:
-				entry.graphics->Create(vulkan_);
+				map[std::pair< Promise<VkShaderModule> *, Promise<VkShaderModule> *>(entry.graphics->desc->vertexShader, entry.graphics->desc->fragmentShader)].push_back(
+						entry.graphics
+				);
 				break;
 			case CompileQueueEntry::Type::COMPUTE:
-				entry.compute->Create(vulkan_);
+				// Queue up pending compute pipelines on separate tasks.
+				entry.compute->CreateAsync(vulkan_);
 				break;
 			}
 		}
-		queueRunner_.NotifyCompileDone();
-	}
-}
 
-void VulkanRenderManager::DrainCompileQueue() {
-	std::unique_lock<std::mutex> lock(compileMutex_);
-	while (!compileQueue_.empty()) {
-		queueRunner_.WaitForCompileNotification();
+		for (auto iter : map) {
+			auto &shaders = iter.first;
+			auto &entries = iter.second;
+
+			NOTICE_LOG(G3D, "For this shader pair, we have %d pipelines to create", (int)entries.size());
+
+			Task *task = new CreateMultiPipelinesTask(vulkan_, entries);
+			g_threadManager.EnqueueTask(task);
+		}
 	}
 }
 

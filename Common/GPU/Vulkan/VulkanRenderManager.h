@@ -166,7 +166,7 @@ struct VKRComputePipeline {
 	VKRComputePipelineDesc *desc = nullptr;
 	Promise<VkPipeline> *pipeline;
 
-	bool Create(VulkanContext *vulkan);
+	bool CreateAsync(VulkanContext *vulkan);
 	bool Pending() const {
 		return pipeline == VK_NULL_HANDLE && desc != nullptr;
 	}
@@ -191,7 +191,6 @@ public:
 
 	void ThreadFunc();
 	void CompileThreadFunc();
-	void DrainCompileQueue();
 
 	// Makes sure that the GPU has caught up enough that we can start writing buffers of this frame again.
 	void BeginFrame(bool enableProfiling, bool enableLogProfiler);
