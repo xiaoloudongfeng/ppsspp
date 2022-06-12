@@ -4,7 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 
-
+#include "Common/Thread/Promise.h"
 #include "Common/Data/Collections/Hashmaps.h"
 #include "Common/GPU/Vulkan/VulkanContext.h"
 #include "Common/GPU/Vulkan/VulkanBarrier.h"
@@ -54,10 +54,10 @@ struct VkRenderData {
 			VkPipeline pipeline;
 		} pipeline;
 		struct {
-			VKRGraphicsPipeline *pipeline;
+			Promise<VkPipeline> *pipeline;
 		} graphics_pipeline;
 		struct {
-			VKRComputePipeline *pipeline;
+			Promise<VkPipeline> *pipeline;
 		} compute_pipeline;
 		struct {
 			VkPipelineLayout pipelineLayout;

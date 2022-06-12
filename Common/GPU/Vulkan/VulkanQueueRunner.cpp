@@ -1189,17 +1189,10 @@ void VulkanQueueRunner::PerformRenderPass(const VKRStep &step, VkCommandBuffer c
 
 		case VKRRenderCommand::BIND_GRAPHICS_PIPELINE:
 		{
-			VKRGraphicsPipeline *pipeline = c.graphics_pipeline.pipeline;
-			if (pipeline->Pending()) {
-				// Stall processing, waiting for the compile queue to catch up.
-				std::unique_lock<std::mutex> lock(compileDoneMutex_);
-				while (!pipeline->pipeline) {
-					compileDone_.wait(lock);
-				}
-			}
-			if (pipeline->pipeline != lastGraphicsPipeline && pipeline->pipeline != VK_NULL_HANDLE) {
-				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
-				lastGraphicsPipeline = pipeline->pipeline;
+			VkPipeline pipeline = c.graphics_pipeline.pipeline->BlockUntilReady();
+			if (pipeline != lastGraphicsPipeline && pipeline != VK_NULL_HANDLE) {
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				lastGraphicsPipeline = pipeline;
 				// Reset dynamic state so it gets refreshed with the new pipeline.
 				lastStencilWriteMask = -1;
 				lastStencilCompareMask = -1;
@@ -1210,17 +1203,10 @@ void VulkanQueueRunner::PerformRenderPass(const VKRStep &step, VkCommandBuffer c
 
 		case VKRRenderCommand::BIND_COMPUTE_PIPELINE:
 		{
-			VKRComputePipeline *pipeline = c.compute_pipeline.pipeline;
-			if (pipeline->Pending()) {
-				// Stall processing, waiting for the compile queue to catch up.
-				std::unique_lock<std::mutex> lock(compileDoneMutex_);
-				while (!pipeline->pipeline) {
-					compileDone_.wait(lock);
-				}
-			}
-			if (pipeline->pipeline != lastComputePipeline && pipeline->pipeline != VK_NULL_HANDLE) {
-				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->pipeline);
-				lastComputePipeline = pipeline->pipeline;
+			VkPipeline pipeline = c.graphics_pipeline.pipeline->BlockUntilReady();
+			if (pipeline != lastComputePipeline && pipeline != VK_NULL_HANDLE) {
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+				lastComputePipeline = pipeline;
 			}
 			break;
 		}
@@ -1337,7 +1323,6 @@ void VulkanQueueRunner::PerformRenderPass(const VKRStep &step, VkCommandBuffer c
 		}
 		default:
 			ERROR_LOG(G3D, "Unimpl queue command");
-			;
 		}
 	}
 	vkCmdEndRenderPass(cmd);
