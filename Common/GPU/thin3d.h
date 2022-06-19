@@ -534,6 +534,7 @@ struct DeviceCaps {
 	bool framebufferDepthCopySupported;
 	bool framebufferDepthBlitSupported;
 	bool framebufferFetchSupported;
+	uint32_t maxTextureSize;
 	std::string deviceName;  // The device name to use when creating the thin3d context, to get the same one.
 };
 

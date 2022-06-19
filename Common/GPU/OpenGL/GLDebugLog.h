@@ -3,6 +3,8 @@
 #include <string>
 #include <cstdint>
 
+#include "Common/CommonFuncs.h"
+
 // Utility to be able to liberally sprinkle GL error checks around your code
 // and easily disable them all in release builds - just undefine DEBUG_OPENGL.
 
@@ -11,7 +13,7 @@
 #if defined(DEBUG_OPENGL)
 
 bool CheckGLError(const char *file, int line);
-#define CHECK_GL_ERROR_IF_DEBUG() if (!CheckGLError(__FILE__, __LINE__)) __debugbreak();
+#define CHECK_GL_ERROR_IF_DEBUG() if (!CheckGLError(__FILE__, __LINE__)) Crash();
 
 #else
 

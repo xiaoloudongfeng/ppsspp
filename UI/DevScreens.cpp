@@ -545,6 +545,7 @@ void SystemInfoScreen::CreateViews() {
 			deviceSpecs->Add(new InfoItem(si->T("High precision float range"), temp));
 		}
 	}
+	deviceSpecs->Add(new InfoItem(si->T("Max texture size"), StringFromFormat("%d", draw->GetDeviceCaps().maxTextureSize)));
 	deviceSpecs->Add(new ItemHeader(si->T("OS Information")));
 	deviceSpecs->Add(new InfoItem(si->T("Memory Page Size"), StringFromFormat(si->T("%d bytes"), GetMemoryProtectPageSize())));
 	deviceSpecs->Add(new InfoItem(si->T("RW/RX exclusive"), PlatformIsWXExclusive() ? di->T("Active") : di->T("Inactive")));

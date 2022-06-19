@@ -663,6 +663,7 @@ D3D9Context::D3D9Context(IDirect3D9 *d3d, IDirect3D9Ex *d3dEx, int adapterId, ID
 	caps_.framebufferCopySupported = false;
 	caps_.framebufferDepthBlitSupported = true;
 	caps_.framebufferDepthCopySupported = false;
+	caps_.maxTextureSize = 4096;  // Not really bothering finding out the right value
 	if (d3d) {
 		D3DDISPLAYMODE displayMode;
 		d3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &displayMode);

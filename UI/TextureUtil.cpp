@@ -110,6 +110,17 @@ bool ManagedTexture::LoadFromFileData(const uint8_t *data, size_t dataSize, Imag
 		return false;
 	}
 
+	int maxTextureSize = draw_->GetDeviceCaps().maxTextureSize;
+
+	if (width[0] > maxTextureSize || height[0] > maxTextureSize) {
+		ERROR_LOG(IO, "Texture too large to load (%dx%d vs %d)\n", width[0], height[0], maxTextureSize);
+		for (int i = 0; i < num_levels; i++) {
+			if (image[i])
+				free(image[i]);
+		}
+		return false;
+	}
+
 	_assert_(image[0] != nullptr);
 
 	if (num_levels < 0 || num_levels >= 16) {

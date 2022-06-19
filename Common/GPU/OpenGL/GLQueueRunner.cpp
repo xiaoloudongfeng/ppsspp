@@ -394,6 +394,7 @@ void GLQueueRunner::RunInitSteps(const std::vector<GLRInitStep> &steps, bool ski
 	CHECK_GL_ERROR_IF_DEBUG();
 
 	// TODO: Use GL_KHR_no_error or a debug callback, where supported?
+	// "Temporarily" disabled error checking, see #13639
 	if (false && allocatedTextures) {
 		// Users may use replacements or scaling, with high render resolutions, and run out of VRAM.
 		// This detects that, rather than looking like PPSSPP is broken.

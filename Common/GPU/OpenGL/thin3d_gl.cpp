@@ -615,6 +615,13 @@ OpenGLContext::OpenGLContext() {
 	}
 #endif
 
+	GLint maxTextureSize;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+
+	caps_.maxTextureSize = maxTextureSize;
+
+	printf("Max GL texture size: %d\n", caps_.maxTextureSize);
+
 	shaderLanguageDesc_.Init(GLSL_1xx);
 
 	shaderLanguageDesc_.glslVersionNumber = gl_extensions.GLSLVersion();

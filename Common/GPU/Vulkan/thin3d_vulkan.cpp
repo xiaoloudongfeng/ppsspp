@@ -789,6 +789,8 @@ VKContext::VKContext(VulkanContext *vulkan, bool splitSubmit)
 	caps_.preferredDepthBufferFormat = DataFormat::D24_S8;  // TODO: Ask vulkan.
 
 	auto deviceProps = vulkan->GetPhysicalDeviceProperties(vulkan_->GetCurrentPhysicalDeviceIndex()).properties;
+	caps_.maxTextureSize = deviceProps.limits.maxImageDimension2D;
+
 	switch (deviceProps.vendorID) {
 	case VULKAN_VENDOR_AMD: caps_.vendor = GPUVendor::VENDOR_AMD; break;
 	case VULKAN_VENDOR_ARM: caps_.vendor = GPUVendor::VENDOR_ARM; break;
