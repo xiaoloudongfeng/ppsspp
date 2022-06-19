@@ -229,6 +229,8 @@ void UpdateTheme(UIContext *ctx) {
 	ui_theme.popupStyle = MakeStyle(themeInfos[i].uPopupStyleFg, themeInfos[i].uPopupStyleBg);
 	ui_theme.backgroundColor = themeInfos[i].uBackgroundColor;
 
+	printf("Loading atlas metadata\n");
+
 	// Load any missing atlas metadata (the images are loaded from UIContext).
 	LoadAtlasMetadata(ui_atlas, (themeInfos[i].UIAtlas + ".meta").c_str(), true);
 #if !(PPSSPP_PLATFORM(WINDOWS) || PPSSPP_PLATFORM(ANDROID))

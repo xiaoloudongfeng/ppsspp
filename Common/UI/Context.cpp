@@ -45,12 +45,15 @@ void UIContext::BeginFrame() {
 		uitexture_ = CreateTextureFromFile(draw_, UIAtlas_.c_str(), ImageFileType::ZIM, false);
 		lastUIAtlas_ = UIAtlas_;
 		if (!fontTexture_) {
+			printf("Loading font images\n");
+
 #if PPSSPP_PLATFORM(WINDOWS) || PPSSPP_PLATFORM(ANDROID)
 			// Don't bother with loading font_atlas.zim
 #else
 			fontTexture_ = CreateTextureFromFile(draw_, "font_atlas.zim", ImageFileType::ZIM, false);
 #endif
 			if (!fontTexture_) {
+				printf("Loading smaller ascii font\n");
 				// Load the smaller ascii font only, like on Android. For debug ui etc.
 				fontTexture_ = CreateTextureFromFile(draw_, "asciifont_atlas.zim", ImageFileType::ZIM, false);
 				if (!fontTexture_) {
