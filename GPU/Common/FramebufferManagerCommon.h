@@ -244,6 +244,8 @@ public:
 			return vfb;
 		}
 	}
+	void SetDepthFrameBuffer();
+
 	void RebindFramebuffer(const char *tag);
 	std::vector<FramebufferInfo> GetFramebufferList();
 
