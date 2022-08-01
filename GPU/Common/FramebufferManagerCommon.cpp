@@ -420,8 +420,6 @@ VirtualFramebuffer *FramebufferManagerCommon::DoSetRenderFrameBuffer(const Frame
 
 	// None found? Create one.
 	if (!vfb) {
-		gstate_c.usingDepth = false;  // reset depth buffer tracking
-
 		vfb = new VirtualFramebuffer{};
 		vfb->fbo = nullptr;
 		vfb->fb_address = params.fb_address;
@@ -462,6 +460,12 @@ VirtualFramebuffer *FramebufferManagerCommon::DoSetRenderFrameBuffer(const Frame
 			NotifyStencilUpload(params.fb_address, byteSize, StencilUpload::STENCIL_IS_ZERO);
 			// TODO: Is it worth trying to upload the depth buffer (only if it wasn't copied above..?)
 		}
+
+		// We don't try to optimize depth buffer tracking on the frame a framebuffer is created.
+		// See #7810
+		gstate_c.usingDepth = true;
+		gstate_c.clearingDepth = false;
+		SetDepthFrameBuffer();
 
 		// Let's check for depth buffer overlap.  Might be interesting.
 		bool sharingReported = false;
